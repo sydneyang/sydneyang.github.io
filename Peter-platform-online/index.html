@@ -32,6 +32,8 @@
     <div class="bar">
       <span><b style="color:#ffd24d">Dad:</b> <kbd>A</kbd><kbd>D</kbd> move, <kbd>W</kbd> jump, <kbd>S</kbd> shoot &nbsp; <b style="color:#65d9ff">Peter:</b> <kbd>←</kbd><kbd>→</kbd> move, <kbd>↑</kbd> jump, <kbd>↓</kbd> shoot</span>
       <button id="restart">Restart level</button>
+      <button id="save-game">Save game</button>
+      <button id="load-game">Continue saved game</button>
     </div>
   </main>
 
@@ -40,6 +42,8 @@
     const canvas = document.querySelector('#game');
     const ctx = canvas.getContext('2d');
     const restart = document.querySelector('#restart');
+    const saveGameButton = document.querySelector('#save-game');
+    const loadGameButton = document.querySelector('#load-game');
     const statusLabel = document.querySelector('#online-status');
     const shareLink = document.querySelector('#share-link');
     const copyLink = document.querySelector('#copy-link');
@@ -94,6 +98,7 @@
     let levelIndex, players, stars, guns, bullets, enemies, message, levelDone, transitionFrames, effects;
     let completedGames = 0, difficultyLevel = 1;
     const scores = { dad: 0, peter: 0 };
+    const SAVE_KEY = 'dad-and-peter-star-team-save-v1';
     let peer, connection, isHost, guestConnected = false, stateFrame = 0;
     const roomParam = new URLSearchParams(location.search).get('room');
     const hasValidRoom = /^[a-z0-9-]{4,32}$/i.test(roomParam || '');
@@ -120,6 +125,37 @@
       levelDone = false;
       transitionFrames = 0;
       message = note || `Level ${levelIndex + 1}: ${current().name}`;
+    }
+    function saveGame() {
+      if (!isHost) { setOnlineStatus('Only Dad can save the shared game.'); return; }
+      try {
+        const save = {
+          version: 1, levelIndex, completedGames, difficultyLevel, scores: { ...scores },
+          stars: stars.map(star => ({ found: star.found })), guns: guns.map(gun => ({ collected: gun.collected })),
+          players: players.map(player => ({ id: player.id, ammo: player.ammo, armed: player.armed, score: player.score }))
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+        setOnlineStatus(`Saved Level ${levelIndex + 1} to this browser.`);
+      } catch { setOnlineStatus('This browser did not allow saving the game.'); }
+    }
+    function loadSavedGame() {
+      if (!isHost) { setOnlineStatus('Only Dad can load the shared game.'); return; }
+      try {
+        const save = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (!save || save.version !== 1 || !Number.isInteger(save.levelIndex) || !levels[save.levelIndex]) throw new Error('No valid save');
+        completedGames = Number.isInteger(save.completedGames) && save.completedGames >= 0 ? save.completedGames : 0;
+        difficultyLevel = Number.isInteger(save.difficultyLevel) && save.difficultyLevel >= 1 ? save.difficultyLevel : 1;
+        scores.dad = Number.isFinite(save.scores?.dad) ? save.scores.dad : 0;
+        scores.peter = Number.isFinite(save.scores?.peter) ? save.scores.peter : 0;
+        startLevel(save.levelIndex, `Saved game restored: Level ${save.levelIndex + 1}.`);
+        stars.forEach((star, index) => { star.found = Boolean(save.stars?.[index]?.found); });
+        guns.forEach((gun, index) => { gun.collected = Boolean(save.guns?.[index]?.collected); });
+        players.forEach(player => {
+          const savedPlayer = save.players?.find(item => item.id === player.id);
+          if (savedPlayer) { player.ammo = Math.max(0, Math.floor(savedPlayer.ammo || 0)); player.armed = Boolean(savedPlayer.armed) && player.ammo > 0; player.score = scores[player.id]; }
+        });
+        setOnlineStatus(`Loaded Level ${save.levelIndex + 1}. Peter can now join Dad's room.`);
+      } catch { setOnlineStatus('No saved game was found in this browser.'); }
     }
     function setOnlineStatus(text) { statusLabel.textContent = text; }
     function broadcastState(force = false) {
@@ -284,11 +320,10 @@
       }
       const allStars = stars.every(star => star.found);
       const flag = { x: current().flag[0], y: current().flag[1], w: 25, h: 72 };
-      for (const player of players) {
-        if (allStars && !player.atGoal && overlaps(player, flag)) { player.atGoal = true; message = `${player.name} is waiting at the flag!`; }
-      }
-      if (allStars && players.every(player => player.atGoal)) { levelDone = true; transitionFrames = 0; message = levelIndex === levels.length - 1 ? `YOU CLEARED ALL FIVE LEVELS! Completed: ${completedGames + 1}` : 'TEAM LEVEL COMPLETE!'; }
-      if (!allStars && players.some(player => overlaps(player, flag))) message = `The flag opens after ${stars.filter(star => star.found).length}/${stars.length} stars.`;
+      const exitZone = { x: flag.x - 18, y: 0, w: W - flag.x + 18, h: H };
+      const exitPlayer = players.find(player => overlaps(player, exitZone));
+      if (allStars && exitPlayer) { exitPlayer.atGoal = true; levelDone = true; transitionFrames = 0; message = levelIndex === levels.length - 1 ? `YOU CLEARED ALL FIVE LEVELS! Completed: ${completedGames + 1}` : `${exitPlayer.name} reached the exit - level complete!`; }
+      if (!allStars && exitPlayer) message = `The exit opens after ${stars.filter(star => star.found).length}/${stars.length} stars.`;
     }
 
     function starPath(x, y, outer, inner) {
@@ -314,6 +349,7 @@
       ctx.fillStyle = '#fff8c6'; ctx.beginPath(); ctx.arc(105, 82, 38, 0, Math.PI * 2); ctx.fill();
       for (let i = 0; i < 38; i++) { const x = (i * 89) % W, y = 25 + (i * 47) % 250; ctx.fillStyle = '#fff'; ctx.globalAlpha = .35 + (i % 3) * .2; ctx.fillRect(x, y, 3, 3); }
       ctx.globalAlpha = 1; ctx.fillStyle = '#273e72'; ctx.beginPath(); ctx.moveTo(0, 380); ctx.lineTo(130, 250); ctx.lineTo(270, 380); ctx.lineTo(420, 230); ctx.lineTo(600, 380); ctx.lineTo(780, 255); ctx.lineTo(960, 380); ctx.closePath(); ctx.fill();
+      const exitStart = current().flag[0] - 18; ctx.fillStyle = stars.every(star => star.found) ? '#65ef9a33' : '#a8aac144'; ctx.fillRect(exitStart, 0, W - exitStart, H); ctx.fillStyle = stars.every(star => star.found) ? '#a8ffd0' : '#d4d5e2'; ctx.font = 'bold 14px system-ui'; ctx.fillText('EXIT', exitStart + 7, 95);
       for (const p of current().platforms) { ctx.fillStyle = '#553e2f'; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle = '#6fcd61'; ctx.fillRect(p.x, p.y, p.w, 8); ctx.fillStyle = '#96ec76'; ctx.fillRect(p.x, p.y, p.w, 3); }
       for (const [x, y, w, h] of current().hazards) { ctx.fillStyle = '#711c24'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#ff4a32'; ctx.beginPath(); for (let px = x; px < x + w; px += 18) { ctx.moveTo(px, y + h); ctx.lineTo(px + 9, y); ctx.lineTo(px + 18, y + h); } ctx.fill(); ctx.fillStyle = '#ffbd3f'; ctx.fillRect(x, y + h - 5, w, 5); }
       for (const star of stars) if (!star.found) { ctx.save(); ctx.shadowColor = '#fff8a4'; ctx.shadowBlur = 15; ctx.fillStyle = '#ffdf44'; starPath(star.x, star.y, 15, 7); ctx.fill(); ctx.restore(); }
@@ -351,8 +387,10 @@
     });
     restart.addEventListener('click', () => {
       if (isHost) startLevel(levelIndex, `Level ${levelIndex + 1}: ${current().name}`);
-      else setOnlineStatus('Only Player 1 can restart the shared level.');
+      else setOnlineStatus('Only Dad can restart the shared level.');
     });
+    saveGameButton.addEventListener('click', saveGame);
+    loadGameButton.addEventListener('click', loadSavedGame);
     startLevel(0); setupOnline(); (function loop() { if (isHost) { update(); broadcastState(); } draw(); requestAnimationFrame(loop); })();
   </script>
 </body>
