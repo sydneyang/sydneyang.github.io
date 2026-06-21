@@ -98,6 +98,8 @@
     const roomParam = new URLSearchParams(location.search).get('room');
     const hasValidRoom = /^[a-z0-9-]{4,32}$/i.test(roomParam || '');
     const room = hasValidRoom ? roomParam : Math.random().toString(36).slice(2, 9);
+    const modeParam = new URLSearchParams(location.search).get('mode');
+    const isFixedDadRoom = room === 'dad-and-peter' && ['host', 'join'].includes(modeParam);
 
     function overlaps(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
     function current() { return levels[levelIndex]; }
@@ -151,11 +153,11 @@
       });
     }
     function setupOnline() {
-      isHost = !hasValidRoom;
+      isHost = modeParam === 'host' || (!hasValidRoom && modeParam !== 'join');
       const roomURL = new URL(location.href);
       roomURL.searchParams.set('room', room);
-      if (isHost) history.replaceState({}, '', roomURL);
-      shareLink.value = roomURL.toString();
+      if (isHost && !hasValidRoom) history.replaceState({}, '', roomURL);
+      shareLink.value = isFixedDadRoom ? new URL('../dad-and-peter-room/', location.href).toString() : roomURL.toString();
       copyLink.addEventListener('click', async () => {
         try { await navigator.clipboard.writeText(shareLink.value); copyLink.textContent = 'Copied!'; }
         catch { shareLink.select(); copyLink.textContent = 'Link selected'; }
@@ -163,15 +165,15 @@
       });
       if (!window.Peer) { setOnlineStatus('Online connection service did not load. Check your internet connection.'); return; }
       if (isHost) {
-        setOnlineStatus('Creating your room…');
+        setOnlineStatus(isFixedDadRoom ? 'Opening Dad and Peter’s permanent room…' : 'Creating your room…');
         peer = new Peer(`peter-platform-online-${room}`);
-        peer.on('open', () => setOnlineStatus('You are Dad. Copy the room link and send it to Peter.'));
+        peer.on('open', () => setOnlineStatus(isFixedDadRoom ? 'You are Dad. Peter can now use the permanent room page to join.' : 'You are Dad. Copy the room link and send it to Peter.'));
         peer.on('connection', incoming => {
           if (connection?.open) { incoming.close(); return; }
           attachConnection(incoming);
         });
       } else {
-        setOnlineStatus('Peter is joining Dad…');
+        setOnlineStatus(isFixedDadRoom ? 'Peter is joining Dad’s permanent room…' : 'Peter is joining Dad…');
         peer = new Peer();
         peer.on('open', () => attachConnection(peer.connect(`peter-platform-online-${room}`, { reliable: true })));
       }
