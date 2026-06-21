@@ -320,10 +320,11 @@
       }
       const allStars = stars.every(star => star.found);
       const flag = { x: current().flag[0], y: current().flag[1], w: 25, h: 72 };
-      const exitZone = { x: flag.x - 18, y: 0, w: W - flag.x + 18, h: H };
-      const exitPlayer = players.find(player => overlaps(player, exitZone));
-      if (allStars && exitPlayer) { exitPlayer.atGoal = true; levelDone = true; transitionFrames = 0; message = levelIndex === levels.length - 1 ? `YOU CLEARED ALL FIVE LEVELS! Completed: ${completedGames + 1}` : `${exitPlayer.name} reached the exit - level complete!`; }
-      if (!allStars && exitPlayer) message = `The exit opens after ${stars.filter(star => star.found).length}/${stars.length} stars.`;
+      for (const player of players) {
+        if (allStars && !player.atGoal && overlaps(player, flag)) { player.atGoal = true; message = `${player.name} is waiting at the flag!`; }
+      }
+      if (allStars && players.every(player => player.atGoal)) { levelDone = true; transitionFrames = 0; message = levelIndex === levels.length - 1 ? `YOU CLEARED ALL FIVE LEVELS! Completed: ${completedGames + 1}` : 'TEAM LEVEL COMPLETE!'; }
+      if (!allStars && players.some(player => overlaps(player, flag))) message = `The flag opens after ${stars.filter(star => star.found).length}/${stars.length} stars.`;
     }
 
     function starPath(x, y, outer, inner) {
@@ -349,7 +350,6 @@
       ctx.fillStyle = '#fff8c6'; ctx.beginPath(); ctx.arc(105, 82, 38, 0, Math.PI * 2); ctx.fill();
       for (let i = 0; i < 38; i++) { const x = (i * 89) % W, y = 25 + (i * 47) % 250; ctx.fillStyle = '#fff'; ctx.globalAlpha = .35 + (i % 3) * .2; ctx.fillRect(x, y, 3, 3); }
       ctx.globalAlpha = 1; ctx.fillStyle = '#273e72'; ctx.beginPath(); ctx.moveTo(0, 380); ctx.lineTo(130, 250); ctx.lineTo(270, 380); ctx.lineTo(420, 230); ctx.lineTo(600, 380); ctx.lineTo(780, 255); ctx.lineTo(960, 380); ctx.closePath(); ctx.fill();
-      const exitStart = current().flag[0] - 18; ctx.fillStyle = stars.every(star => star.found) ? '#65ef9a33' : '#a8aac144'; ctx.fillRect(exitStart, 0, W - exitStart, H); ctx.fillStyle = stars.every(star => star.found) ? '#a8ffd0' : '#d4d5e2'; ctx.font = 'bold 14px system-ui'; ctx.fillText('EXIT', exitStart + 7, 95);
       for (const p of current().platforms) { ctx.fillStyle = '#553e2f'; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle = '#6fcd61'; ctx.fillRect(p.x, p.y, p.w, 8); ctx.fillStyle = '#96ec76'; ctx.fillRect(p.x, p.y, p.w, 3); }
       for (const [x, y, w, h] of current().hazards) { ctx.fillStyle = '#711c24'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#ff4a32'; ctx.beginPath(); for (let px = x; px < x + w; px += 18) { ctx.moveTo(px, y + h); ctx.lineTo(px + 9, y); ctx.lineTo(px + 18, y + h); } ctx.fill(); ctx.fillStyle = '#ffbd3f'; ctx.fillRect(x, y + h - 5, w, 5); }
       for (const star of stars) if (!star.found) { ctx.save(); ctx.shadowColor = '#fff8a4'; ctx.shadowBlur = 15; ctx.fillStyle = '#ffdf44'; starPath(star.x, star.y, 15, 7); ctx.fill(); ctx.restore(); }
