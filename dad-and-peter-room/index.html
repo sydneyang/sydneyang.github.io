@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dad &amp; Peter Room</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; color: #f8f7ff; font: 16px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; background: radial-gradient(circle at 50% 0, #334a9a, #111633 56%, #070914); }
+    main { width: min(100% - 32px, 950px); margin: 0 auto; padding: 56px 0 42px; }
+    header { text-align: center; margin-bottom: 35px; }
+    h1 { font-size: clamp(2.2rem, 7vw, 4.2rem); margin: 0; letter-spacing: -.04em; }
+    header p { color: #d8ddff; margin: 8px auto 0; max-width: 620px; }
+    .how { margin: 0 auto 26px; max-width: 700px; padding: 15px 18px; border: 1px solid #697ed1; border-radius: 14px; background: #151b42c9; }
+    .how strong { color: #ffdf57; }
+    .games { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); }
+    .game { min-height: 245px; padding: 23px; border: 1px solid #667bd0; border-radius: 18px; background: linear-gradient(145deg, #24377b, #182252); box-shadow: 0 12px 25px #0005; }
+    .game h2 { margin: 0 0 8px; font-size: 1.55rem; }
+    .game p { margin: 0 0 18px; color: #dce2ff; }
+    .buttons { display: grid; gap: 9px; }
+    a.button { display: block; padding: 10px 14px; border-radius: 10px; text-decoration: none; text-align: center; color: #20203a; font-weight: 800; background: #ffdc54; }
+    a.button.join { background: #67d5ff; }
+    .coming { border-style: dashed; background: #141938b8; color: #9fa9d7; }
+    .coming h2 { color: #cdd4f5; }
+    footer { margin-top: 30px; text-align: center; color: #aeb8e8; font-size: .92rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Dad &amp; Peter Room</h1>
+      <p>A permanent home for Dad and Peter’s games. Pick a game, then play together from two devices.</p>
+    </header>
+
+    <section class="how">
+      <strong>Star Team:</strong> Dad opens the room first and leaves the game open. Peter then opens this same page on his device and selects <em>Join Dad's Room</em>. No temporary links are needed.
+    </section>
+
+    <section class="games" aria-label="Games">
+      <article class="game">
+        <h2>Star Team</h2>
+        <p>Collect stars, use blasters, avoid the chasers, and clear all five levels together.</p>
+        <div class="buttons">
+          <a class="button" href="../Peter-platform-online/?room=dad-and-peter&amp;mode=host">Dad: Host Dad's Room</a>
+          <a class="button join" href="../Peter-platform-online/?room=dad-and-peter&amp;mode=join">Peter: Join Dad's Room</a>
+        </div>
+      </article>
+
+      <article class="game coming">
+        <h2>Next game</h2>
+        <p>This card is ready for the next Dad and Peter game: a puzzle, racing game, quiz, or something completely new.</p>
+      </article>
+
+      <article class="game coming">
+        <h2>More coming soon</h2>
+        <p>Each new game can get its own card and a permanent room from this one home page.</p>
+      </article>
+    </section>
+
+    <footer>Dad &amp; Peter Room - choose a game and play together.</footer>
+  </main>
+</body>
+</html>
