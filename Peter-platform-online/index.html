@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Peter &amp; Parent: Star Team</title>
+  <title>Dad &amp; Peter: Star Team</title>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -22,7 +22,7 @@
 </head>
 <body>
   <main>
-    <h1>Peter &amp; Parent: Star Team</h1>
+    <h1>Dad &amp; Peter: Star Team</h1>
     <p>Work together: collect every star, avoid the chasers, and both reach the flag.</p>
     <section class="online" aria-label="Online room controls">
       <strong id="online-status">Preparing an online room…</strong>
@@ -30,7 +30,7 @@
     </section>
     <canvas id="game" width="960" height="540" aria-label="Two player platform game"></canvas>
     <div class="bar">
-      <span><b style="color:#65d9ff">P1 Blue:</b> <kbd>A</kbd><kbd>D</kbd> move, <kbd>W</kbd> jump &nbsp; <b style="color:#ff91d7">P2 Pink:</b> <kbd>←</kbd><kbd>→</kbd> move, <kbd>↑</kbd> jump</span>
+      <span><b style="color:#ffd24d">Dad:</b> <kbd>A</kbd><kbd>D</kbd> move, <kbd>W</kbd> jump, <kbd>S</kbd> shoot &nbsp; <b style="color:#65d9ff">Peter:</b> <kbd>←</kbd><kbd>→</kbd> move, <kbd>↑</kbd> jump, <kbd>↓</kbd> shoot</span>
       <button id="restart">Restart level</button>
     </div>
   </main>
@@ -53,6 +53,7 @@
         name: 'Warm-up Woods',
         platforms: [ground, { x: 115, y: 395, w: 165, h: 20 }, { x: 385, y: 325, w: 160, h: 20 }, { x: 650, y: 245, w: 150, h: 20 }, { x: 745, y: 405, w: 130, h: 20 }],
         stars: [[190, 350], [460, 280], [725, 200], [808, 360]],
+        guns: [[72, 440], [250, 350]],
         hazards: [[290, 463, 76, 27], [558, 463, 80, 27]],
         enemies: [[485, 448, 1.45]], flag: [892, 418]
       },
@@ -60,6 +61,7 @@
         name: 'Stepping Stones',
         platforms: [ground, { x: 92, y: 410, w: 130, h: 20 }, { x: 300, y: 350, w: 125, h: 20 }, { x: 500, y: 290, w: 145, h: 20 }, { x: 720, y: 385, w: 135, h: 20 }],
         stars: [[155, 365], [360, 305], [570, 245], [785, 340], [905, 445]],
+        guns: [[72, 440], [350, 305]],
         hazards: [[224, 463, 68, 27], [427, 463, 68, 27], [648, 463, 64, 27]],
         enemies: [[450, 448, 1.55], [685, 448, 1.35]], flag: [900, 418]
       },
@@ -67,6 +69,7 @@
         name: 'Moonlit Climb',
         platforms: [ground, { x: 85, y: 405, w: 110, h: 20 }, { x: 250, y: 335, w: 120, h: 20 }, { x: 430, y: 265, w: 125, h: 20 }, { x: 620, y: 335, w: 120, h: 20 }, { x: 790, y: 255, w: 105, h: 20 }],
         stars: [[140, 360], [310, 290], [490, 220], [680, 290], [842, 210]],
+        guns: [[72, 440], [310, 290]],
         hazards: [[198, 463, 45, 27], [373, 463, 50, 27], [560, 463, 54, 27], [745, 463, 42, 27]],
         enemies: [[390, 448, 1.65], [710, 448, 1.55]], flag: [905, 418]
       },
@@ -74,6 +77,7 @@
         name: 'Chaser Canyon',
         platforms: [ground, { x: 70, y: 360, w: 145, h: 20 }, { x: 295, y: 410, w: 110, h: 20 }, { x: 475, y: 320, w: 145, h: 20 }, { x: 710, y: 385, w: 145, h: 20 }],
         stars: [[130, 315], [350, 365], [545, 275], [775, 340], [910, 445]],
+        guns: [[72, 440], [130, 315]],
         hazards: [[220, 463, 70, 27], [408, 463, 64, 27], [625, 463, 78, 27]],
         enemies: [[255, 448, 1.7], [440, 448, 1.8], [665, 448, 1.6]], flag: [900, 418]
       },
@@ -81,12 +85,15 @@
         name: 'The Star Fortress',
         platforms: [ground, { x: 85, y: 405, w: 115, h: 20 }, { x: 255, y: 325, w: 115, h: 20 }, { x: 420, y: 405, w: 100, h: 20 }, { x: 575, y: 300, w: 125, h: 20 }, { x: 760, y: 220, w: 130, h: 20 }],
         stars: [[140, 360], [315, 280], [470, 360], [635, 255], [825, 175], [915, 445]],
+        guns: [[72, 440], [315, 280]],
         hazards: [[203, 463, 48, 27], [372, 463, 45, 27], [522, 463, 48, 27], [703, 463, 52, 27]],
         enemies: [[225, 448, 1.85], [540, 448, 1.75], [705, 448, 1.9]], flag: [900, 418]
       }
     ];
 
-    let levelIndex, players, stars, enemies, message, levelDone, transitionFrames;
+    let levelIndex, players, stars, guns, bullets, enemies, message, levelDone, transitionFrames, effects;
+    let completedGames = 0, difficultyLevel = 1;
+    const scores = { dad: 0, peter: 0 };
     let peer, connection, isHost, guestConnected = false, stateFrame = 0;
     const roomParam = new URLSearchParams(location.search).get('room');
     const hasValidRoom = /^[a-z0-9-]{4,32}$/i.test(roomParam || '');
@@ -94,17 +101,20 @@
 
     function overlaps(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
     function current() { return levels[levelIndex]; }
-    function makePlayer(id, x, color, controls) {
-      return { id, x, y: 420, spawnX: x, w: 30, h: 42, vx: 0, vy: 0, onGround: false, facing: 1, color, controls, invincible: 60, atGoal: false };
+    function makePlayer(id, name, age, x, color, controls, w, h) {
+      return { id, name, age, x, y: ground.y - h, spawnX: x, spawnY: ground.y - h, w, h, vx: 0, vy: 0, onGround: false, facing: 1, color, controls, invincible: 60, atGoal: false, score: scores[id], armed: false, ammo: 0, shootCooldown: 0 };
     }
     function startLevel(index = levelIndex, note) {
       levelIndex = index;
       players = [
-        makePlayer('P1', 35, '#54caff', { left: 'KeyA', right: 'KeyD', jump: 'KeyW' }),
-        makePlayer('P2', 76, '#ff83d1', { left: 'ArrowLeft', right: 'ArrowRight', jump: 'ArrowUp' })
+        makePlayer('dad', 'Dad', 40, 35, '#ffd24d', { left: 'KeyA', right: 'KeyD', jump: 'KeyW', shoot: 'KeyS' }, 34, 48),
+        makePlayer('peter', 'Peter', 11, 80, '#54caff', { left: 'ArrowLeft', right: 'ArrowRight', jump: 'ArrowUp', shoot: 'ArrowDown' }, 28, 38)
       ];
       stars = current().stars.map(([x, y]) => ({ x, y, found: false }));
-      enemies = current().enemies.map(([x, y, speed]) => ({ x, y, w: 32, h: 30, vx: 0, vy: 0, speed, onGround: false, hop: 35 }));
+      guns = current().guns.map(([x, y]) => ({ x, y, collected: false }));
+      bullets = [];
+      enemies = current().enemies.map(([x, y, speed]) => ({ x, y, spawnX: x, spawnY: y, w: 32, h: 30, vx: 0, vy: 0, speed: speed * (1 + (difficultyLevel - 1) * 0.10), onGround: false, hop: 35, alive: true, respawn: 0 }));
+      effects = [];
       levelDone = false;
       transitionFrames = 0;
       message = note || `Level ${levelIndex + 1}: ${current().name}`;
@@ -112,30 +122,32 @@
     function setOnlineStatus(text) { statusLabel.textContent = text; }
     function broadcastState(force = false) {
       if (!isHost || !connection?.open || (!force && ++stateFrame % 2)) return;
-      connection.send({ type: 'state', state: { levelIndex, players, stars, enemies, message, levelDone, transitionFrames } });
+      connection.send({ type: 'state', state: { levelIndex, players, stars, guns, bullets, enemies, message, levelDone, transitionFrames, effects, completedGames, difficultyLevel } });
     }
     function applyRemoteState(state) {
       if (!state || !Number.isInteger(state.levelIndex) || !levels[state.levelIndex] || !Array.isArray(state.players)) return;
-      levelIndex = state.levelIndex; players = state.players; stars = state.stars; enemies = state.enemies;
+      levelIndex = state.levelIndex; players = state.players; stars = state.stars; guns = state.guns || []; bullets = state.bullets || []; enemies = state.enemies;
       message = state.message; levelDone = state.levelDone; transitionFrames = state.transitionFrames;
+      effects = state.effects || []; completedGames = state.completedGames || 0; difficultyLevel = state.difficultyLevel || 1;
     }
     function attachConnection(conn) {
       connection = conn;
       conn.on('open', () => {
         guestConnected = true;
-        if (isHost) ['ArrowLeft', 'ArrowRight', 'ArrowUp'].forEach(code => keys.delete(code));
-        setOnlineStatus(isHost ? 'Player 2 joined — play together!' : 'Connected as Player 2 — use the arrow keys.');
+        if (isHost) ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].forEach(code => keys.delete(code));
+        setOnlineStatus(isHost ? 'Peter joined Dad — play together!' : 'Connected as Peter — use the arrow keys.');
         if (isHost) broadcastState(true);
       });
       conn.on('data', data => {
-        if (isHost && data?.type === 'key' && ['ArrowLeft', 'ArrowRight', 'ArrowUp'].includes(data.code)) {
+        if (isHost && data?.type === 'key' && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(data.code)) {
           if (data.down) keys.add(data.code); else keys.delete(data.code);
           if (data.down && !data.repeat && data.code === 'ArrowUp') jump(players[1]);
+          if (data.down && !data.repeat && data.code === 'ArrowDown') shoot(players[1]);
         } else if (!isHost && data?.type === 'state') applyRemoteState(data.state);
       });
       conn.on('close', () => {
-        guestConnected = false; connection = null; ['ArrowLeft', 'ArrowRight', 'ArrowUp'].forEach(code => keys.delete(code));
-        setOnlineStatus(isHost ? 'Player 2 left. Share the room link to invite someone.' : 'Connection closed. Ask Player 1 to open the room again.');
+        guestConnected = false; connection = null; ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].forEach(code => keys.delete(code));
+        setOnlineStatus(isHost ? 'Peter left. Share the room link to invite him again.' : 'Connection closed. Ask Dad to open the room again.');
       });
     }
     function setupOnline() {
@@ -153,21 +165,50 @@
       if (isHost) {
         setOnlineStatus('Creating your room…');
         peer = new Peer(`peter-platform-online-${room}`);
-        peer.on('open', () => setOnlineStatus('You are Player 1. Copy the room link and send it to Player 2.'));
+        peer.on('open', () => setOnlineStatus('You are Dad. Copy the room link and send it to Peter.'));
         peer.on('connection', incoming => {
           if (connection?.open) { incoming.close(); return; }
           attachConnection(incoming);
         });
       } else {
-        setOnlineStatus('Joining Player 1…');
+        setOnlineStatus('Peter is joining Dad…');
         peer = new Peer();
         peer.on('open', () => attachConnection(peer.connect(`peter-platform-online-${room}`, { reliable: true })));
       }
-      peer.on('error', error => setOnlineStatus(`Online connection problem: ${error.type}. Player 1 must open the room link first.`));
+      peer.on('error', error => setOnlineStatus(`Online connection problem: ${error.type}. Dad must open the room link first.`));
+    }
+    function addScore(player, points) {
+      player.score += points; scores[player.id] = player.score;
+      effects.push({ text: `${points > 0 ? '+' : ''}${points}`, x: player.x + player.w / 2, y: player.y - 8, life: 60, color: points > 0 ? '#ffea56' : '#ff6c7b' });
+    }
+    function updateEffects() {
+      effects = effects.filter(effect => { effect.y -= 0.55; effect.life--; return effect.life > 0; });
+    }
+    function addTextEffect(x, y, text, color) { effects.push({ text, x, y, life: 60, color }); }
+    function shoot(player) {
+      if (levelDone || player.shootCooldown || !player.armed || player.ammo <= 0) return;
+      player.ammo--; player.shootCooldown = 16; player.armed = player.ammo > 0;
+      bullets.push({ x: player.x + (player.facing > 0 ? player.w + 2 : -8), y: player.y + player.h * 0.52, w: 10, h: 4, vx: player.facing * 10, life: 80, owner: player.id });
+      addTextEffect(player.x + player.w / 2, player.y - 8, 'POW!', '#b8f4ff');
+    }
+    function updateBullets() {
+      bullets = bullets.filter(bullet => {
+        bullet.x += bullet.vx; bullet.life--;
+        const enemy = enemies.find(chaser => chaser.alive && overlaps(bullet, chaser));
+        if (enemy) {
+          enemy.alive = false; enemy.respawn = 110;
+          const owner = players.find(player => player.id === bullet.owner);
+          if (owner) { addScore(owner, 150); message = `${owner.name} zapped a chaser! +150 points.`; }
+          addTextEffect(enemy.x + enemy.w / 2, enemy.y, 'ZAP!', '#b8f4ff');
+          return false;
+        }
+        return bullet.life > 0 && bullet.x > -20 && bullet.x < W + 20;
+      });
     }
     function respawn(player, reason) {
-      player.x = player.spawnX; player.y = 420; player.vx = 0; player.vy = 0; player.invincible = 90; player.atGoal = false;
-      message = `${player.id} ${reason}! Back to the start.`;
+      addScore(player, -50);
+      player.x = player.spawnX; player.y = player.spawnY; player.vx = 0; player.vy = 0; player.invincible = 90; player.atGoal = false;
+      message = `${player.name} ${reason}! -50 points.`;
     }
     function landOnPlatforms(entity) {
       const oldBottom = entity.y + entity.h;
@@ -187,10 +228,15 @@
       player.vy += 0.62;
       landOnPlatforms(player);
       if (player.invincible > 0) player.invincible--;
+      if (player.shootCooldown > 0) player.shootCooldown--;
       if (player.y > H + 80) respawn(player, 'fell');
       for (const [x, y, w, h] of current().hazards) if (overlaps(player, { x, y, w, h })) respawn(player, 'touched lava');
     }
     function updateEnemy(enemy) {
+      if (!enemy.alive) {
+        if (--enemy.respawn <= 0) { enemy.x = enemy.spawnX; enemy.y = enemy.spawnY; enemy.vx = 0; enemy.vy = 0; enemy.hop = 35; enemy.alive = true; addTextEffect(enemy.x + enemy.w / 2, enemy.y, 'BACK!', '#ff8795'); }
+        return;
+      }
       const target = players.reduce((closest, player) => Math.abs(player.x - enemy.x) < Math.abs(closest.x - enemy.x) ? player : closest);
       enemy.vx = Math.sign(target.x - enemy.x) * enemy.speed;
       enemy.x = Math.max(0, Math.min(W - enemy.w, enemy.x + enemy.vx));
@@ -204,30 +250,42 @@
       if (enemy.y > H + 80) { enemy.x = W - 120; enemy.y = 420; enemy.vy = 0; }
     }
     function update() {
+      updateEffects();
       if (levelDone) {
         if (++transitionFrames > 120) {
-          if (levelIndex === levels.length - 1) startLevel(0, 'Five levels cleared! Start a new team adventure.');
+          if (levelIndex === levels.length - 1) {
+            completedGames++;
+            difficultyLevel++;
+            startLevel(0, `Adventure ${completedGames + 1}: chasers are now ${(difficultyLevel - 1) * 10}% faster!`);
+          }
           else startLevel(levelIndex + 1, `Level ${levelIndex + 2}: ${levels[levelIndex + 1].name}`);
         }
         return;
       }
       players.forEach(updatePlayer);
+      updateBullets();
       enemies.forEach(updateEnemy);
       for (const player of players) {
-        if (!player.invincible && enemies.some(enemy => overlaps(player, enemy))) respawn(player, 'was caught');
+        if (!player.invincible && enemies.some(enemy => enemy.alive && overlaps(player, enemy))) respawn(player, 'was caught');
       }
       for (const star of stars) {
-        if (!star.found && players.some(player => overlaps(player, { x: star.x - 14, y: star.y - 14, w: 28, h: 28 }))) {
+        const collector = players.find(player => overlaps(player, { x: star.x - 14, y: star.y - 14, w: 28, h: 28 }));
+        if (!star.found && collector) {
           star.found = true;
+          addScore(collector, 100);
           message = `Team stars: ${stars.filter(star => star.found).length}/${stars.length}`;
         }
+      }
+      for (const gun of guns) {
+        const holder = players.find(player => overlaps(player, { x: gun.x - 14, y: gun.y - 11, w: 28, h: 22 }));
+        if (!gun.collected && holder) { gun.collected = true; holder.armed = true; holder.ammo += 3; addTextEffect(holder.x + holder.w / 2, holder.y - 8, 'BLASTER x3', '#b8f4ff'); message = `${holder.name} picked up a blaster with 3 shots!`; }
       }
       const allStars = stars.every(star => star.found);
       const flag = { x: current().flag[0], y: current().flag[1], w: 25, h: 72 };
       for (const player of players) {
-        if (allStars && !player.atGoal && overlaps(player, flag)) { player.atGoal = true; message = `${player.id} is waiting at the flag!`; }
+        if (allStars && !player.atGoal && overlaps(player, flag)) { player.atGoal = true; message = `${player.name} is waiting at the flag!`; }
       }
-      if (allStars && players.every(player => player.atGoal)) { levelDone = true; transitionFrames = 0; message = levelIndex === levels.length - 1 ? 'YOU CLEARED ALL FIVE LEVELS!' : 'TEAM LEVEL COMPLETE!'; }
+      if (allStars && players.every(player => player.atGoal)) { levelDone = true; transitionFrames = 0; message = levelIndex === levels.length - 1 ? `YOU CLEARED ALL FIVE LEVELS! Completed: ${completedGames + 1}` : 'TEAM LEVEL COMPLETE!'; }
       if (!allStars && players.some(player => overlaps(player, flag))) message = `The flag opens after ${stars.filter(star => star.found).length}/${stars.length} stars.`;
     }
 
@@ -238,12 +296,16 @@
     }
     function drawPlayer(player) {
       ctx.save(); ctx.globalAlpha = player.invincible && Math.floor(player.invincible / 6) % 2 ? 0.42 : 1;
+      ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#171a3b'; ctx.lineWidth = 3;
+      ctx.strokeText(player.name, player.x + player.w / 2, player.y - 11); ctx.fillText(player.name, player.x + player.w / 2, player.y - 11);
       ctx.translate(player.x + player.w / 2, player.y); ctx.scale(player.facing, 1); ctx.translate(-player.w / 2, 0);
-      ctx.fillStyle = player.color; ctx.fillRect(5, 18, 21, 22);
-      ctx.fillStyle = '#31446d'; ctx.fillRect(6, 38, 8, 5); ctx.fillRect(18, 38, 8, 5);
-      ctx.fillStyle = '#ffd0a5'; ctx.fillRect(7, 5, 18, 16);
-      ctx.fillStyle = player.id === 'P1' ? '#6c4938' : '#553555'; ctx.fillRect(5, 1, 22, 8);
-      ctx.fillStyle = '#182141'; ctx.fillRect(20, 11, 3, 3); ctx.restore();
+      const isDad = player.id === 'dad';
+      ctx.fillStyle = player.color; ctx.fillRect(isDad ? 5 : 4, isDad ? 21 : 17, isDad ? 24 : 20, isDad ? 23 : 19);
+      ctx.fillStyle = '#31446d'; ctx.fillRect(isDad ? 6 : 5, player.h - 5, 9, 5); ctx.fillRect(isDad ? 19 : 16, player.h - 5, 9, 5);
+      ctx.fillStyle = '#ffd0a5'; ctx.fillRect(isDad ? 7 : 6, isDad ? 6 : 4, isDad ? 20 : 17, isDad ? 17 : 15);
+      if (isDad) { ctx.fillStyle = '#71727a'; ctx.fillRect(6, 2, 22, 7); ctx.fillStyle = '#5d4b43'; ctx.fillRect(8, 20, 17, 5); }
+      else { ctx.fillStyle = '#6d3e2b'; ctx.fillRect(4, 1, 21, 7); ctx.fillStyle = '#ffd0a5'; ctx.fillRect(4, 12, 3, 3); }
+      ctx.fillStyle = '#182141'; ctx.fillRect(isDad ? 21 : 19, isDad ? 12 : 10, 3, 3); ctx.restore();
     }
     function draw() {
       const sky = ctx.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#1d2e75'); sky.addColorStop(.65, '#7953ad'); sky.addColorStop(1, '#f29a76'); ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
@@ -253,22 +315,29 @@
       for (const p of current().platforms) { ctx.fillStyle = '#553e2f'; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle = '#6fcd61'; ctx.fillRect(p.x, p.y, p.w, 8); ctx.fillStyle = '#96ec76'; ctx.fillRect(p.x, p.y, p.w, 3); }
       for (const [x, y, w, h] of current().hazards) { ctx.fillStyle = '#711c24'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#ff4a32'; ctx.beginPath(); for (let px = x; px < x + w; px += 18) { ctx.moveTo(px, y + h); ctx.lineTo(px + 9, y); ctx.lineTo(px + 18, y + h); } ctx.fill(); ctx.fillStyle = '#ffbd3f'; ctx.fillRect(x, y + h - 5, w, 5); }
       for (const star of stars) if (!star.found) { ctx.save(); ctx.shadowColor = '#fff8a4'; ctx.shadowBlur = 15; ctx.fillStyle = '#ffdf44'; starPath(star.x, star.y, 15, 7); ctx.fill(); ctx.restore(); }
+      for (const gun of guns) if (!gun.collected) { ctx.save(); ctx.translate(gun.x, gun.y); ctx.fillStyle = '#b8f4ff'; ctx.shadowColor = '#b8f4ff'; ctx.shadowBlur = 10; ctx.fillRect(-13, -6, 24, 9); ctx.fillRect(4, 2, 7, 10); ctx.fillStyle = '#31446d'; ctx.fillRect(-8, -3, 9, 4); ctx.restore(); }
+      for (const bullet of bullets) { ctx.save(); ctx.fillStyle = '#d9f7ff'; ctx.shadowColor = '#b8f4ff'; ctx.shadowBlur = 8; ctx.fillRect(bullet.x, bullet.y, bullet.w, bullet.h); ctx.restore(); }
       const [flagX, flagY] = current().flag, unlocked = stars.every(star => star.found); ctx.strokeStyle = '#e7efff'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(flagX + 7, flagY); ctx.lineTo(flagX + 7, flagY + 72); ctx.stroke(); ctx.fillStyle = unlocked ? '#64ef8d' : '#a8aac1'; ctx.beginPath(); ctx.moveTo(flagX + 9, flagY + 5); ctx.lineTo(flagX + 55, flagY + 19); ctx.lineTo(flagX + 9, flagY + 35); ctx.closePath(); ctx.fill();
-      for (const enemy of enemies) { ctx.save(); ctx.translate(enemy.x, enemy.y); ctx.fillStyle = '#ec4054'; ctx.beginPath(); ctx.arc(16, 15, 16, Math.PI, 0); ctx.lineTo(32, 30); ctx.lineTo(0, 30); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(8, 12, 6, 6); ctx.fillRect(19, 12, 6, 6); ctx.fillStyle = '#25213d'; ctx.fillRect(11, 14, 2, 3); ctx.fillRect(22, 14, 2, 3); ctx.restore(); }
+      for (const enemy of enemies) { if (!enemy.alive) continue; ctx.save(); ctx.translate(enemy.x, enemy.y); ctx.fillStyle = '#ec4054'; ctx.beginPath(); ctx.arc(16, 15, 16, Math.PI, 0); ctx.lineTo(32, 30); ctx.lineTo(0, 30); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(8, 12, 6, 6); ctx.fillRect(19, 12, 6, 6); ctx.fillStyle = '#25213d'; ctx.fillRect(11, 14, 2, 3); ctx.fillRect(22, 14, 2, 3); ctx.restore(); }
       players.forEach(drawPlayer);
       ctx.fillStyle = '#141938cc'; ctx.fillRect(18, 16, 405, 48); ctx.fillStyle = '#fff'; ctx.font = 'bold 20px system-ui'; ctx.fillText(`Level ${levelIndex + 1}/5 · ${current().name}`, 31, 38); ctx.font = '16px system-ui'; ctx.fillText(message, 31, 58);
       ctx.fillStyle = '#141938cc'; ctx.fillRect(790, 16, 152, 42); ctx.fillStyle = '#ffdf44'; ctx.font = 'bold 18px system-ui'; ctx.fillText(`★ ${stars.filter(s => s.found).length}/${stars.length}`, 810, 43);
       if (levelDone) { ctx.fillStyle = '#111a'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#fff'; ctx.font = 'bold 44px system-ui'; ctx.textAlign = 'center'; ctx.fillText(message, W / 2, 245); ctx.font = '22px system-ui'; ctx.fillText(levelIndex === levels.length - 1 ? 'Restarting at Level 1 shortly…' : 'Next level shortly…', W / 2, 285); ctx.textAlign = 'start'; }
+      if (!levelDone) {
+        for (const effect of effects) { ctx.save(); ctx.globalAlpha = effect.life / 60; ctx.textAlign = 'center'; ctx.font = 'bold 22px system-ui'; ctx.fillStyle = effect.color; ctx.shadowColor = '#151633'; ctx.shadowBlur = 5; ctx.fillText(effect.text, effect.x, effect.y); ctx.restore(); }
+        ctx.fillStyle = '#141938cc'; ctx.fillRect(18, 16, 470, 48); ctx.fillStyle = '#fff'; ctx.font = 'bold 20px system-ui'; ctx.fillText(`Level ${levelIndex + 1}/5 - ${current().name}`, 31, 38); ctx.font = '16px system-ui'; ctx.fillText(message, 31, 58);
+        ctx.fillStyle = '#141938cc'; ctx.fillRect(570, 16, 372, 57); ctx.font = 'bold 17px system-ui'; ctx.fillStyle = '#ffd24d'; ctx.fillText(`Dad: ${players[0].score}  Blaster: ${players[0].ammo}`, 586, 38); ctx.fillStyle = '#65d9ff'; ctx.fillText(`Peter: ${players[1].score}  Blaster: ${players[1].ammo}`, 750, 38); ctx.fillStyle = '#ffdf44'; ctx.font = '15px system-ui'; ctx.fillText(`Stars ${stars.filter(s => s.found).length}/${stars.length}  |  Games cleared: ${completedGames}  |  Chasers +${(difficultyLevel - 1) * 10}%`, 586, 61);
+      }
     }
     function jump(player) { if (player.onGround && !levelDone) { player.vy = -12.8; player.onGround = false; } }
-    function isPlayerOneKey(code) { return ['KeyA', 'KeyD', 'KeyW'].includes(code); }
-    function isPlayerTwoKey(code) { return ['ArrowLeft', 'ArrowRight', 'ArrowUp'].includes(code); }
+    function isPlayerOneKey(code) { return ['KeyA', 'KeyD', 'KeyW', 'KeyS'].includes(code); }
+    function isPlayerTwoKey(code) { return ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(code); }
     window.addEventListener('keydown', event => {
       if (!isPlayerOneKey(event.code) && !isPlayerTwoKey(event.code)) return;
       event.preventDefault();
       if (isHost && (isPlayerOneKey(event.code) || !guestConnected)) {
         keys.add(event.code);
-        if (!event.repeat) players.forEach(player => { if (event.code === player.controls.jump) jump(player); });
+        if (!event.repeat) players.forEach(player => { if (event.code === player.controls.jump) jump(player); if (event.code === player.controls.shoot) shoot(player); });
       } else if (!isHost && isPlayerTwoKey(event.code)) {
         connection?.open && connection.send({ type: 'key', code: event.code, down: true, repeat: event.repeat });
       }
