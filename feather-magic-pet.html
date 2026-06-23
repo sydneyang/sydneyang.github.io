@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6555bc">
+  <title>Feather 的魔法小世界</title>
+  <style>
+    :root { --ink:#342d63; --purple:#6958c7; --pink:#f789b7; --cream:#fff9ee; --card:#ffffffd9; --gold:#ffca58; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; background:linear-gradient(180deg,#8273dc 0%,#b79ce4 38%,#ffe1c0 100%); overflow-x:hidden; -webkit-tap-highlight-color:transparent; }
+    button { font:inherit; cursor:pointer; border:0; touch-action:manipulation; }
+    .sky-dot { position:fixed; width:7px; height:7px; background:#fff; border-radius:99px; opacity:.75; animation:twinkle 2.4s ease-in-out infinite alternate; }
+    .sky-dot:nth-child(1){left:7%;top:12%}.sky-dot:nth-child(2){left:18%;top:31%;animation-delay:.5s}.sky-dot:nth-child(3){left:81%;top:11%;animation-delay:.8s}.sky-dot:nth-child(4){left:93%;top:28%;animation-delay:1.1s}.sky-dot:nth-child(5){left:74%;top:39%;animation-delay:1.5s}
+    .app { width:min(760px,100%); min-height:100vh; margin:auto; padding:18px 16px 30px; position:relative; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+    .brand { color:#fff; text-shadow:0 2px 0 #5b4aa7; }
+    .brand small { display:block; letter-spacing:.08em; font-size:12px; opacity:.92; }
+    .brand h1 { margin:2px 0 0; font-size:25px; line-height:1.05; }
+    .stats { display:flex; gap:7px; }
+    .stat { background:#ffffffd9; padding:7px 9px; border-radius:14px; text-align:center; min-width:55px; box-shadow:0 3px 0 #745fac; font-weight:800; font-size:17px; }
+    .stat span { display:block; font-size:10px; font-weight:700; opacity:.7; margin-top:1px; }
+    .world { background:linear-gradient(180deg,#c8b8f4 0%,#fbded0 65%,#f8c990 100%); min-height:342px; border:4px solid #fff9; border-radius:28px; position:relative; overflow:hidden; box-shadow:0 9px 0 #7861ad55; transition:background .45s ease; }
+    .world.event-rainbow { background:linear-gradient(180deg,#a9d7fb 0%,#e8c7f7 43%,#ffdfb7 68%,#f8c990 100%); }
+    .world.event-star { background:linear-gradient(180deg,#3f367d 0%,#7163b3 63%,#f8c990 100%); }
+    .world.event-butterfly { background:linear-gradient(180deg,#afe7ea 0%,#fae2c7 65%,#f8c990 100%); }
+    .moon { position:absolute; width:88px; height:88px; top:19px; right:36px; border-radius:50%; background:#fff5c9; box-shadow:0 0 0 9px #fff4c144,0 0 34px 12px #fffbd777; }
+    .cloud { position:absolute; background:#fff8f0b8; height:18px; width:72px; border-radius:99px; }
+    .cloud:before,.cloud:after { content:""; position:absolute; background:inherit; border-radius:50%; bottom:6px; }
+    .cloud:before { width:28px;height:28px;left:13px; }.cloud:after { width:38px;height:38px;right:9px; }
+    .c1{top:66px;left:4%;transform:scale(.75)} .c2{top:132px;right:1%;transform:scale(.48)}
+    .ground { position:absolute; width:130%; height:155px; bottom:-85px; left:-15%; border-radius:50% 50% 0 0; background:#a2d181; box-shadow:inset 0 9px #c7eca1; }
+    .plant { position:absolute; bottom:48px; font-size:34px; filter:drop-shadow(0 3px 0 #70a457); }.plant.left{left:16px}.plant.right{right:19px;font-size:40px}
+    .home { position:absolute; left:calc(50% - 111px); bottom:52px; width:222px; height:182px; background:#d676a7; border:6px solid #713e86; border-radius:46% 46% 25% 25%; box-shadow:inset 0 9px #f7a3c7,0 6px 0 #6b4a96; }
+    .home:before { content:""; position:absolute; height:17px; width:181px; left:15px; top:-20px; background:#ffe17d; border:5px solid #713e86; border-radius:50%; }
+    .window { position:absolute; width:38px;height:45px; top:37px; border-radius:50% 50% 40% 40%; background:#fff5ad; border:5px solid #713e86; box-shadow:inset 10px 0 #ffd56f; }.window.w1{left:24px}.window.w2{right:24px}
+    .door { position:absolute; bottom:0; left:75px; width:61px; height:84px; background:#a664aa; border:5px solid #713e86; border-bottom:0; border-radius:32px 32px 0 0; }.door:after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#ffe77a;right:9px;top:40px;}
+    .pet-zone { position:absolute; left:50%; transform:translateX(-50%); bottom:78px; width:118px; height:132px; z-index:2; }
+    .pet { position:absolute; bottom:0; left:8px; width:102px; height:105px; transition:transform .35s ease; filter:drop-shadow(0 5px 0 #63429166); }
+    .pet.happy { transform:translateY(-15px) rotate(-4deg); }.pet.play { animation:bounce .55s ease 2; }.pet.eat { animation:nibble .22s ease 4; }.pet.sleep { transform:rotate(8deg) translateY(8px); }
+    .body { position:absolute; width:91px;height:82px;bottom:0;left:5px;border-radius:53% 48% 44% 50%;background:#8ed8e6;border:5px solid #4d4b9b;box-shadow:inset 12px 11px #c9f3ef; }
+    .belly { position:absolute;width:49px;height:42px;bottom:11px;left:25px;border-radius:50%;background:#fff8d8;border:3px solid #4d4b9b; }
+    .head { position:absolute;width:77px;height:65px;top:2px;left:16px;border-radius:55% 48% 50% 47%;background:#9be4ed;border:5px solid #4d4b9b;box-shadow:inset 12px 8px #d7faf2; }
+    .eye { position:absolute;top:25px;width:11px;height:16px;background:#3e356c;border-radius:50%; }.eye:after{content:"";position:absolute;top:2px;left:3px;width:4px;height:5px;background:#fff;border-radius:50%;}.e1{left:25px}.e2{right:22px}
+    .beak { position:absolute;top:39px;left:34px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:14px solid #ffa85d;filter:drop-shadow(0 2px 0 #4d4b9b); }
+    .wing { position:absolute;width:42px;height:51px;background:#65bdd8;border:5px solid #4d4b9b;border-radius:60% 35% 60% 40%;bottom:21px; }.wing.left{left:-4px;transform:rotate(22deg)}.wing.right{right:-2px;transform:scaleX(-1) rotate(22deg)}
+    .feather { position:absolute;width:22px;height:41px;border-radius:90% 10% 90% 10%;background:#ec8eba;border:4px solid #4d4b9b;top:-21px; }.f1{left:24px;transform:rotate(-22deg)}.f2{left:43px;top:-26px;background:#ffcf67;transform:rotate(4deg)}.f3{left:61px;transform:rotate(25deg);background:#b890e5}
+    .sparkles { pointer-events:none; position:absolute; inset:-26px; }.sparkles span{position:absolute; color:#fff6a9;font-size:22px; opacity:0; }.sparkles.show span {animation:spark .85s ease forwards;}.sparkles span:nth-child(1){left:0;top:20px}.sparkles span:nth-child(2){right:-3px;top:7px;animation-delay:.1s}.sparkles span:nth-child(3){left:55px;top:-12px;animation-delay:.2s}
+    .speech { position:absolute; left:50%; transform:translateX(-50%); bottom:216px; width:max-content; max-width:240px; text-align:center; padding:8px 12px; color:#514473; font-size:14px; font-weight:800; background:#fffef5; border-radius:17px; box-shadow:0 3px 0 #887cb5; }.speech:after{content:"";position:absolute;bottom:-8px;left:48%;border:9px solid transparent;border-top-color:#fffef5;border-bottom:0;}
+    .event-layer { pointer-events:none; position:absolute; inset:0; z-index:4; display:grid; place-items:center; overflow:hidden; }.event-picture { font-size:82px; opacity:0; transform:scale(.3); text-shadow:0 4px 9px #513a8755; }.event-layer.show .event-picture { opacity:1; animation:magic-pop 2.8s ease both; }.event-layer.rainbow .event-picture{font-size:112px}.event-layer.star .event-picture{font-size:90px}.event-layer.butterfly .event-picture{font-size:80px}
+    .event-layer:before,.event-layer:after{content:"✦";position:absolute;color:#fff8a1;font-size:25px;opacity:0}.event-layer.show:before{left:18%;top:22%;animation:spark 1.3s ease .1s 2}.event-layer.show:after{right:19%;top:40%;animation:spark 1.25s ease .4s 2}
+    .daily-card { margin:-2px 10px 14px; position:relative; z-index:3; background:var(--card); border-radius:20px; padding:12px 14px; box-shadow:0 4px 0 #7764a366; text-align:center; }.daily-card strong{color:#e16698}.daily-card p{margin:4px 0 0;font-size:13px;font-weight:700;}
+    .actions { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .action { min-height:113px; padding:11px 6px 9px; border-radius:22px; color:#423564; font-weight:900; background:#fffdf6; box-shadow:0 5px 0 #ad86a7; transition:transform .15s,filter .15s; }.action:hover:not(:disabled){transform:translateY(-3px)}.action:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #ad86a7}.action:disabled,.tool-card.done{filter:grayscale(.65);opacity:.62;cursor:default;box-shadow:0 3px 0 #a89daf}.action .icon{display:block;font-size:36px;line-height:42px}.action small{display:block;opacity:.72;font-weight:700;margin-top:3px}
+    .tool-card { display:flex; min-height:113px; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:7px 5px 8px; user-select:none; }.tool-card strong{font-size:14px;line-height:1.1}.tool-card small{font-size:11px;display:block;opacity:.72;margin-top:4px}.catch-item{width:52px;height:52px;margin:0 0 3px;border-radius:50%;background:linear-gradient(135deg,#fff7e5,#f2d9ff);box-shadow:0 3px 0 #b67ebb;display:grid;place-items:center;font-size:35px;touch-action:manipulation;user-select:none;transition:transform .14s,filter .14s}.catch-item:hover{transform:scale(1.08)}.catch-item:active{transform:scale(.95)}.tool-card.done .catch-item{pointer-events:none}
+    .catch-stage { position:absolute; inset:0; z-index:12; overflow:hidden; touch-action:manipulation; background:linear-gradient(180deg,#5261b9ee 0%,#9e82d5ee 62%,#a7d583ee 100%); }.catch-stage[hidden],.feeding-tray[hidden]{display:none}.catch-hud{position:absolute;z-index:3;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:9px;align-items:center;white-space:nowrap;color:#463865;font-weight:900;background:#fff9e9ed;border-radius:99px;padding:7px 11px;box-shadow:0 3px 0 #64509955;font-size:13px}.catch-count{color:#e35d94}.falling-item{position:absolute;z-index:2;width:62px;height:62px;padding:0;background:transparent;font-size:42px;line-height:1;filter:drop-shadow(0 3px 1px #49345b66);will-change:transform;user-select:none}.falling-item:active{transform:scale(.82)!important}.catch-tip{position:absolute;z-index:3;bottom:17px;left:50%;width:90%;transform:translateX(-50%);color:#fff;font-size:13px;font-weight:900;text-align:center;text-shadow:0 2px 2px #4b3d79}.feeding-tray{position:absolute;left:9px;right:9px;bottom:8px;z-index:11;min-height:67px;padding:7px 9px;border-radius:19px;background:#fff8e8ed;box-shadow:0 3px 0 #70558d66;text-align:center}.tray-title{font-size:12px;font-weight:900;color:#684878;margin-bottom:2px}.tray-items{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}.tray-item{width:43px;height:43px;border-radius:50%;padding:0;background:#f2e3ff;box-shadow:0 2px 0 #b988ba;font-size:28px;animation:tray-in .25s ease both}.tray-item:active{transform:scale(.86)}.delivery{position:absolute;left:calc(50% - 25px);bottom:18px;z-index:13;font-size:47px;pointer-events:none;animation:deliver 1s cubic-bezier(.38,.01,.73,1) both;filter:drop-shadow(0 4px 3px #3f347788)}
+    .message { min-height:57px; margin:14px 0 12px; background:#fff8e9dd; border-radius:17px; padding:11px 13px; text-align:center; font-size:14px; font-weight:800; box-shadow:0 3px 0 #816aaa66; }
+    .progress { display:flex; gap:5px; justify-content:center; align-items:center; margin-bottom:13px; font-weight:800; font-size:13px; }.progress i { width:18px;height:18px;border-radius:50%;background:#ffffff99;border:2px solid #fff;display:inline-grid;place-items:center;font-style:normal;font-size:12px;}.progress i.done{background:#ffce59;}
+    .bottom { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; align-items:center; font-size:12px; color:#fff; }.tiny { background:#ffffff38;color:#fff;border:1px solid #ffffff5c;border-radius:99px;padding:7px 11px; }
+    dialog { width:min(420px,calc(100% - 32px)); border:0; border-radius:24px; color:#44365e; padding:0; box-shadow:0 20px 55px #31275d99; }.modal-inner{padding:25px 23px;text-align:center;background:#fffaf2;border-radius:24px}.modal-inner h2{margin:0;color:#d65e99}.modal-inner p{line-height:1.6;font-size:14px;font-weight:700}.start{background:#ec78aa;color:#fff;padding:12px 23px;border-radius:99px;box-shadow:0 4px 0 #b55282;font-weight:900;}.start:active{transform:translateY(3px);box-shadow:0 1px 0 #b55282}dialog::backdrop{background:#30265880}.wish-options{display:grid;gap:9px;margin:16px 0 2px}.wish-choice{padding:12px 10px;border-radius:16px;background:#f3e8ff;color:#5a4682;font-weight:900;text-align:left;box-shadow:0 3px 0 #c7a8df}.wish-choice:hover{transform:translateY(-2px)}
+    @keyframes twinkle{to{transform:scale(.4);opacity:.3}} @keyframes bounce{50%{transform:translateY(-28px) rotate(4deg)}} @keyframes nibble{50%{transform:rotate(8deg) translateY(3px) scale(1.05)}} @keyframes spark{0%{opacity:0;transform:scale(.4)}45%{opacity:1;transform:translateY(-18px) scale(1.2)}100%{opacity:0;transform:translateY(-34px) scale(.8)}} @keyframes magic-pop{0%{opacity:0;transform:scale(.3) rotate(-12deg)}18%{opacity:1;transform:scale(1.15) rotate(6deg)}72%{opacity:1;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(1.35) translateY(-35px)}} @keyframes deliver{0%{opacity:0;transform:translateY(65px) scale(.45)}30%{opacity:1;transform:translateY(10px) scale(1.15)}72%{opacity:1;transform:translateY(-94px) scale(1)}100%{opacity:0;transform:translateY(-118px) scale(.5)}} @keyframes tray-in{from{opacity:0;transform:scale(.35) rotate(-25deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+    @media (max-width:420px){.app{padding:14px 10px 22px}.brand h1{font-size:22px}.stat{min-width:49px;padding:6px}.world{min-height:315px}.home{transform:scale(.9);transform-origin:bottom center}.pet-zone{bottom:69px}.speech{bottom:197px}.actions{gap:7px}.action{min-height:107px;font-size:14px}.action .icon{font-size:32px}}
+  </style>
+</head>
+<body>
+  <span class="sky-dot"></span><span class="sky-dot"></span><span class="sky-dot"></span><span class="sky-dot"></span><span class="sky-dot"></span>
+  <main class="app">
+    <header>
+      <div class="brand"><small>✦ LUNA 和 FEATHER 的</small><h1>魔法小世界</h1></div>
+      <div class="stats"><div class="stat" id="stars">0<span>魔法星星</span></div><div class="stat" id="days">1<span>一起第几天</span></div></div>
+    </header>
+    <section class="world" aria-label="Feather 的家">
+      <div class="moon"></div><div class="cloud c1"></div><div class="cloud c2"></div>
+      <div class="speech" id="speech">Luna 来啦！我在等你呢！</div>
+      <div class="event-layer" id="event-layer" aria-live="polite"><div class="event-picture" id="event-picture"></div></div>
+      <div class="catch-stage" id="catch-stage" hidden aria-live="polite">
+        <div class="catch-hud"><span id="catch-title">点点看！</span><span class="catch-count">接到 <b id="catch-count">0</b> 个</span></div>
+        <div class="catch-tip">轻轻点每一个从天上落下来的魔法物品！</div>
+      </div>
+      <div class="home"><div class="window w1"></div><div class="window w2"></div><div class="door"></div></div>
+      <div class="plant left">🌷</div><div class="plant right">🌿</div><div class="ground"></div>
+      <div class="pet-zone"><div class="sparkles" id="sparkles"><span>✦</span><span>✧</span><span>★</span></div><div class="pet" id="pet"><div class="wing left"></div><div class="wing right"></div><div class="body"></div><div class="belly"></div><div class="head" id="head-target" aria-label="把东西拖到 Feather 头上"></div><div class="eye e1"></div><div class="eye e2"></div><div class="beak"></div><div class="feather f1"></div><div class="feather f2"></div><div class="feather f3"></div></div></div>
+      <div class="feeding-tray" id="feeding-tray" hidden><div class="tray-title" id="tray-title">点一个给 Feather</div><div class="tray-items" id="tray-items"></div></div>
+    </section>
+    <section class="daily-card"><strong id="today-title">今天的小愿望：一起收集 3 颗星星</strong><p id="today-desc">每做一件事，Feather 就会变得更有魔法。</p></section>
+    <div class="actions" aria-label="照顾 Feather">
+      <div class="action tool-card" id="feed-card"><button class="catch-item" id="berry" type="button" aria-label="开始水果小游戏">🫐</button><strong id="fruit-action-label">接蓝莓喂 Feather</strong><small id="fruit-action-tip">轻点落下的蓝莓</small></div>
+      <div class="action tool-card" id="play-card"><button class="catch-item" id="magic-feather" type="button" aria-label="开始羽毛小游戏">🪶</button><strong id="feather-action-label">接彩虹羽毛</strong><small id="feather-action-tip">轻点落下的羽毛</small></div>
+      <button class="action" data-action="wish" id="wish"><span class="icon">🪄</span>许一个愿<small>真的会发生魔法</small></button>
+    </div>
+    <div class="message" id="message">选一件事，和 Feather 一起开始今天的冒险吧。</div>
+    <div class="progress" aria-label="今天的进度"><span>今天的魔法：</span><i id="p-feed">✓</i><i id="p-play">✓</i><i id="p-wish">✓</i></div>
+    <div class="bottom"><button class="tiny" id="music-toggle">🎵 开音乐</button><button class="tiny" id="new-day">☀️ 开始新的一天</button><button class="tiny" id="reset">重新开始</button></div>
+  </main>
+  <dialog id="welcome"><div class="modal-inner"><div style="font-size:55px">🪽</div><h2>欢迎 Feather！</h2><p>这是 Luna 和 Feather 的魔法小世界。<br>每天照顾 Feather 三次，收集星星，创造属于你们的故事。</p><button class="start" id="start">开始今天的冒险 ✦</button></div></dialog>
+  <dialog id="wish-modal"><div class="modal-inner"><div style="font-size:48px">🪄</div><h2 id="wish-heading">Feather 想许什么愿？</h2><p>选一个愿望，看看魔法会怎样发生。</p><div class="wish-options" id="wish-options"></div></div></dialog>
+  <script>
+    const key = 'luna-feather-magic-pet-v2';
+    const defaultState = { stars:0, days:1, date:new Date().toDateString(), actions:[] };
+    const savedState = localStorage.getItem(key) || localStorage.getItem('luna-feather-magic-pet-v1');
+    let state;
+    try { state = { ...defaultState, ...JSON.parse(savedState || '{}') }; } catch { state = {...defaultState}; }
+    const messages = { feed:['Feather 吃得饱饱的！'], play:['Feather 抱着羽毛跳起舞！'] };
+    const wishEvents = {
+      rainbow:{ icon:'🌈', world:'rainbow', label:'我想看一条彩虹！', speech:'哇！彩虹从月亮旁边跑出来了！', message:'Luna 的彩虹愿望实现啦！天空变成了七种颜色。' },
+      star:{ icon:'🌠 ✨', world:'star', label:'我想让流星飞过天空！', speech:'快看！一颗流星飞过 Feather 的屋顶！', message:'流星划过夜空，还留下了一颗闪闪的愿望星。' },
+      butterfly:{ icon:'🦋 🌸', world:'butterfly', label:'我想邀请蝴蝶来跳舞！', speech:'蝴蝶来啦！它们在花园里跳起舞。', message:'花园里出现了蝴蝶舞会，Feather 开心得转圈圈。' },
+      moon:{ icon:'🌙 ☁️', world:'moon', label:'我想坐一朵月亮云！', speech:'月亮送来了一朵软绵绵的云！', message:'Feather 坐上月亮云，在天空慢慢飘了一圈。' },
+      garden:{ icon:'🌸 🌷', world:'butterfly', label:'我想让花园开满花！', speech:'花园里一下子开出了好多花！', message:'花朵从地里钻出来，Feather 送给 Luna 一朵。' },
+      firefly:{ icon:'✨ 🪲', world:'star', label:'我想和萤火虫玩！', speech:'好多小光点飞进了花园！', message:'萤火虫点亮了 Feather 的小屋，像一盏盏小灯。' },
+      snow:{ icon:'❄️ ☃️', world:'moon', label:'我想下一场糖霜雪！', speech:'糖霜雪花慢慢飘下来了！', message:'雪花轻轻落在 Feather 的羽毛上，凉凉的、甜甜的。' },
+      dragon:{ icon:'🐉 ✨', world:'rainbow', label:'我想看一只小龙！', speech:'一只友善的小龙飞过彩虹！', message:'小龙送来一颗会发光的魔法石，然后飞回云朵里。' }
+    };
+    const dailyThemes = [
+      { fruitIcon:'🫐', fruitName:'蓝莓', featherIcon:'🌈🪶', featherName:'彩虹羽毛', wishes:['rainbow','star','butterfly'] },
+      { fruitIcon:'🍓', fruitName:'草莓', featherIcon:'🌟🪶', featherName:'金色羽毛', wishes:['moon','garden','firefly'] },
+      { fruitIcon:'🍇', fruitName:'葡萄', featherIcon:'🌙🪶', featherName:'月光羽毛', wishes:['star','snow','dragon'] },
+      { fruitIcon:'🍑', fruitName:'桃子', featherIcon:'🌸🪶', featherName:'花朵羽毛', wishes:['garden','butterfly','rainbow'] },
+      { fruitIcon:'🍒', fruitName:'樱桃', featherIcon:'✨🪶', featherName:'星星羽毛', wishes:['firefly','moon','dragon'] }
+    ];
+    const $ = s => document.querySelector(s);
+    let audioContext, musicTimer, musicOn = false, musicStep = 0;
+
+    function todayTheme(){ return dailyThemes[(state.days-1) % dailyThemes.length]; }
+    function activityFor(action){
+      const theme=todayTheme();
+      return action==='feed'
+        ? { item:theme.fruitIcon, name:theme.fruitName, title:theme.fruitName+'雨来啦！', done:'Luna 一颗一颗喂完了 '+theme.fruitName+'，Feather 吃得饱饱的！' }
+        : { item:theme.featherIcon, name:theme.featherName, title:theme.featherName+'雨来啦！', done:'Luna 一根一根送完了 '+theme.featherName+'，Feather 开心地跳起舞！' };
+    }
+
+    function save(){ localStorage.setItem(key, JSON.stringify(state)); }
+    function getAudio(){
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) return null;
+      if (!audioContext) audioContext = new Audio();
+      if (audioContext.state === 'suspended') audioContext.resume();
+      return audioContext;
+    }
+    function tone(frequency, duration=.12, type='sine', volume=.035, delay=0){
+      const ctx = getAudio();
+      if (!ctx) return;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const start = ctx.currentTime + delay;
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(.0001, start);
+      gain.gain.exponentialRampToValueAtTime(volume, start + .015);
+      gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+      oscillator.connect(gain).connect(ctx.destination);
+      oscillator.start(start); oscillator.stop(start + duration + .03);
+    }
+    function playSound(kind){
+      if (kind === 'feed') [523,659,784].forEach((note,i)=>tone(note,.12,'sine',.045,i*.08));
+      if (kind === 'play') [440,587,740,880].forEach((note,i)=>tone(note,.09,'triangle',.035,i*.07));
+      if (kind === 'wish') [523,659,784,1047].forEach((note,i)=>tone(note,.22,'sine',.04,i*.1));
+      if (kind === 'catch') [659,880].forEach((note,i)=>tone(note,.1,'sine',.04,i*.055));
+      if (kind === 'drop') tone(220,.08,'triangle',.025);
+      if (kind === 'newday') [392,523,659].forEach((note,i)=>tone(note,.18,'sine',.035,i*.1));
+    }
+    function playMusic(){
+      if (!musicOn) return;
+      const notes = [523,659,784,659,587,659,523,494];
+      tone(notes[musicStep % notes.length],.27,'sine',.018);
+      if (musicStep % 2 === 0) tone(notes[(musicStep + 3) % notes.length] / 2,.35,'triangle',.010,.02);
+      musicStep++;
+      musicTimer = window.setTimeout(playMusic, 360);
+    }
+    function setMusic(on){
+      musicOn = on;
+      window.clearTimeout(musicTimer);
+      $('#music-toggle').textContent = on ? '🔇 关音乐' : '🎵 开音乐';
+      if (on) { getAudio(); playMusic(); }
+    }
+
+    function render(){
+      $('#stars').firstChild.nodeValue = state.stars;
+      $('#days').firstChild.nodeValue = state.days;
+      const theme=todayTheme();
+      $('#today-title').textContent = '第 '+state.days+' 天：'+theme.fruitName+' 和 '+theme.featherName+' 的魔法日！';
+      $('#berry').textContent=theme.fruitIcon;
+      $('#magic-feather').textContent=theme.featherIcon;
+      $('#fruit-action-label').textContent='接 '+theme.fruitName+' 喂 Feather';
+      $('#fruit-action-tip').textContent='轻点落下的 '+theme.fruitName;
+      $('#feather-action-label').textContent='接 '+theme.featherName;
+      $('#feather-action-tip').textContent='轻点落下的羽毛';
+      const feedDone = state.actions.includes('feed'), playDone = state.actions.includes('play'), wishDone = state.actions.includes('wish');
+      $('#feed-card').classList.toggle('done', feedDone);
+      $('#play-card').classList.toggle('done', playDone);
+      $('#berry').setAttribute('aria-disabled', feedDone);
+      $('#magic-feather').setAttribute('aria-disabled', playDone);
+      $('#wish').disabled = wishDone;
+      $('#wish').querySelector('small').textContent = wishDone ? '愿望实现啦 ✦' : '每天会换新愿望';
+      ['feed','play','wish'].forEach(a=>$('#p-'+a).classList.toggle('done',state.actions.includes(a)));
+      $('#today-desc').textContent = state.actions.length === 3 ? '今天完成！Feather 把 3 颗星星放进了 Luna 的星星罐。' : '轻点天空中掉下的物品，收好后再一个一个送给 Feather。';
+      renderWishChoices(theme);
+      save();
+    }
+    function sparkle(){ const s=$('#sparkles'); s.classList.remove('show'); void s.offsetWidth; s.classList.add('show'); }
+    function doAction(action, customMessage){
+      if(state.actions.includes(action)) return;
+      state.actions.push(action); state.stars += 1;
+      const random = customMessage || messages[action][Math.floor(Math.random()*messages[action].length)];
+      $('#message').textContent = random;
+      $('#speech').textContent = action==='feed' ? '啊呜！好甜！谢谢 Luna！' : action==='play' ? '羽毛飘起来啦！' : $('#speech').textContent;
+      const pet=$('#pet');
+      pet.className='pet '+(action==='feed'?'eat':action==='play'?'play':'happy');
+      sparkle();
+      playSound(action);
+      if(state.actions.length===3){ setTimeout(()=>{ $('#message').textContent='今天的 3 件魔法事都完成啦！明天再来看看 Feather 吧。'; $('#speech').textContent='Luna 是最棒的魔法朋友！'; },650); }
+      render();
+      setTimeout(()=>pet.className='pet',1200);
+    }
+    let catching = null, feeding = null;
+    const catchStage = $('#catch-stage');
+    const feedingTray = $('#feeding-tray');
+    function addFallingItem(game){
+      const el=document.createElement('button');
+      el.type='button'; el.className='falling-item'; el.textContent=game.config.item;
+      el.setAttribute('aria-label','点一下 '+game.config.name);
+      const width=catchStage.clientWidth;
+      const object={ el, x:12+Math.random()*(width-74), y:-62, speed:2+Math.random()*1.15, spin:(Math.random()-.5)*.14 };
+      el.addEventListener('click',()=>collectFallingItem(game,object));
+      game.objects.push(object); catchStage.appendChild(el);
+    }
+    function collectFallingItem(game,object){
+      if (catching!==game || !game.objects.includes(object)) return;
+      object.el.remove(); game.objects=game.objects.filter(item=>item!==object); game.caught++;
+      $('#catch-count').textContent=game.caught;
+      playSound('catch'); sparkle();
+    }
+    function openFeedingTray(game){
+      feeding={ action:game.action, config:game.config, remaining:game.caught };
+      $('#tray-title').textContent='点一个 '+game.config.name+' 送给 Feather（还剩 '+feeding.remaining+' 个）';
+      const items=$('#tray-items'); items.replaceChildren();
+      for(let i=0;i<game.caught;i++){
+        const button=document.createElement('button');
+        button.type='button'; button.className='tray-item'; button.textContent=game.config.item;
+        button.setAttribute('aria-label','送一个 '+game.config.name+' 给 Feather');
+        button.addEventListener('click',()=>giveOneToFeather(button));
+        items.appendChild(button);
+      }
+      feedingTray.hidden=false;
+      $('#message').textContent='Luna 接到了 '+game.caught+' 个 '+game.config.name+'！现在点它们，一个一个送给 Feather。';
+      $('#speech').textContent='我想一个一个收到 Luna 的礼物！';
+    }
+    function giveOneToFeather(button){
+      if (!feeding || button.disabled) return;
+      button.disabled=true; button.remove(); feeding.remaining--;
+      const parcel=document.createElement('div'); parcel.className='delivery'; parcel.textContent=feeding.config.item; $('.world').appendChild(parcel);
+      const pet=$('#pet'); pet.className='pet '+(feeding.action==='feed'?'eat':'play');
+      playSound('catch'); sparkle();
+      $('#tray-title').textContent=feeding.remaining ? '再点一个给 Feather（还剩 '+feeding.remaining+' 个）' : 'Feather 正在收最后一个礼物！';
+      window.setTimeout(()=>{ parcel.remove(); pet.className='pet'; },850);
+      if (!feeding.remaining) {
+        const finished=feeding; feeding=null;
+        window.setTimeout(()=>{ feedingTray.hidden=true; doAction(finished.action,finished.config.done); },700);
+      }
+    }
+    function finishCatchGame(){
+      const game=catching;
+      if (!game || game.finished) return;
+      game.finished=true; catching=null;
+      game.objects.forEach(object=>object.el.remove());
+      window.setTimeout(()=>{
+        catchStage.hidden=true;
+        if (!game.caught) {
+          $('#message').textContent='差一点点！再点一次，轻轻点住掉下来的 '+game.config.name+' 吧。';
+          $('#speech').textContent='我相信 Luna 下次一定能点到！';
+          return;
+        }
+        openFeedingTray(game);
+      },250);
+    }
+    function catchTick(now){
+      const game=catching;
+      if (!game || game.finished) return;
+      if (!game.last) { game.last=now; game.nextSpawn=now; }
+      const dt=Math.min(40,now-game.last); game.last=now;
+      if (game.spawned<game.total && now>=game.nextSpawn) { addFallingItem(game); game.spawned++; game.nextSpawn=now+430; }
+      const height=catchStage.clientHeight;
+      for (const object of [...game.objects]) {
+        object.y += object.speed*(dt/16);
+        object.el.style.transform='translate('+object.x+'px,'+object.y+'px) rotate('+(object.y*object.spin)+'deg)';
+        if (object.y>height+55) { object.el.remove(); game.objects=game.objects.filter(item=>item!==object); }
+      }
+      if (game.spawned===game.total && !game.objects.length) finishCatchGame();
+      else window.requestAnimationFrame(catchTick);
+    }
+    function startCatchGame(action){
+      if (state.actions.includes(action) || catching || feeding) return;
+      getAudio();
+      const config=activityFor(action);
+      catchStage.hidden=false; catchStage.querySelectorAll('.falling-item').forEach(item=>item.remove());
+      $('#catch-title').textContent=config.title; $('#catch-count').textContent='0';
+      catching={ action, config, objects:[], caught:0, spawned:0, total:8, finished:false, last:0, nextSpawn:0 };
+      $('#message').textContent='轻轻点落下来的 '+config.name+'，把它们收好！';
+      $('#speech').textContent='Luna，快点点看！';
+      window.requestAnimationFrame(catchTick);
+    }
+    function renderWishChoices(theme){
+      const options=$('#wish-options'); options.replaceChildren();
+      theme.wishes.forEach(kind=>{
+        const event=wishEvents[kind];
+        const button=document.createElement('button');
+        button.type='button'; button.className='wish-choice'; button.dataset.wish=kind;
+        button.textContent=event.icon+' '+event.label;
+        options.appendChild(button);
+      });
+    }
+    function showWishEvent(kind){
+      const event = wishEvents[kind];
+      const layer=$('#event-layer'), world=$('.world');
+      $('#event-picture').textContent=event.icon;
+      layer.className='event-layer '+event.world;
+      void layer.offsetWidth; layer.classList.add('show');
+      world.classList.remove('event-rainbow','event-star','event-butterfly'); world.classList.add('event-'+event.world);
+      $('#speech').textContent=event.speech;
+      window.setTimeout(()=>{ layer.className='event-layer'; world.classList.remove('event-rainbow','event-star','event-butterfly'); },3100);
+      doAction('wish',event.message);
+    }
+
+    $('#berry').addEventListener('click',()=>startCatchGame('feed'));
+    $('#magic-feather').addEventListener('click',()=>startCatchGame('play'));
+    $('#wish').addEventListener('click',()=>{ if(state.actions.includes('wish')) return; getAudio(); $('#wish-modal').showModal(); });
+    $('#wish-options').addEventListener('click',event=>{ const button=event.target.closest('.wish-choice'); if (!button) return; $('#wish-modal').close(); showWishEvent(button.dataset.wish); });
+    $('#music-toggle').addEventListener('click',()=>setMusic(!musicOn));
+    $('#new-day').addEventListener('click',()=>{ if(!state.actions.length){ $('#message').textContent='今天还没有和 Feather 玩呢，先选一个小活动吧！'; return; } state.days++; state.actions=[]; $('#message').textContent='早安，Feather！新的魔法一天开始啦。'; $('#speech').textContent='Luna！我做了一个新梦！'; playSound('newday'); render(); });
+    $('#reset').addEventListener('click',()=>{ if(confirm('要让 Feather 从第一天重新开始吗？')) { state={...defaultState}; $('#message').textContent='Feather 回到第一天，等着 Luna 来玩。'; $('#speech').textContent='Luna 来啦！我在等你呢！'; render(); } });
+    const welcome=$('#welcome');
+    if(!savedState) welcome.showModal();
+    $('#start').addEventListener('click',()=>{ welcome.close(); setMusic(true); });
+    render();
+  </script>
+</body>
+</html>
